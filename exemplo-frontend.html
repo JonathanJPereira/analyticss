@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo - Analytics Backend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #45a049;
+        }
+        .button.danger {
+            background: #f44336;
+        }
+        .button.danger:hover {
+            background: #da190b;
+        }
+        .button.info {
+            background: #2196F3;
+        }
+        .button.info:hover {
+            background: #0b7dda;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+        }
+        .log {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .log-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .log-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .log-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Exemplo de Uso - Analytics Backend</h1>
+        
+        <div class="status" id="status">
+            Status: Conectando...
+        </div>
+
+        <div>
+            <h3>📊 Ações de Analytics</h3>
+            <button class="button" onclick="simularVisita()">
+                🔔 Simular Nova Visita (/init)
+            </button>
+            
+            <button class="button info" onclick="simularAcao('clique_botao', {botao: 'comprar', produto: 'ABC123'})">
+                🛒 Clique Botão Comprar
+            </button>
+            
+            <button class="button info" onclick="simularAcao('visualizar_produto', {produto: 'XYZ789', categoria: 'eletronicos'})">
+                👁️ Visualizar Produto
+            </button>
+            
+            <button class="button info" onclick="simularAcao('download', {arquivo: 'manual.pdf', tamanho: '2.5MB'})">
+                📥 Download Arquivo
+            </button>
+            
+            <button class="button danger" onclick="simularAcao('erro_404', {url: window.location.href, referrer: document.referrer})">
+                ❌ Simular Erro 404
+            </button>
+        </div>
+
+        <div>
+            <h3>🔧 Testes do Sistema</h3>
+            <button class="button info" onclick="verificarStatus()">
+                📊 Verificar Status
+            </button>
+            
+            <button class="button" onclick="testarWhatsApp()">
+                📱 Testar WhatsApp
+            </button>
+        </div>
+
+        <div id="log" class="log">
+            <div class="log-info">📝 Log de atividades aparecerá aqui...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        
+        // Função para adicionar log
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.innerHTML = `${new Date().toLocaleTimeString()} - ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Simular nova visita
+        async function simularVisita() {
+            try {
+                addLog('🔄 Enviando nova visita...', 'info');
+                
+                const response = await fetch(`${API_BASE}/init`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userAgent: navigator.userAgent,
+                        ip: '192.168.1.100', // IP simulado
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog(`✅ Nova visita registrada - Session ID: ${data.sessionId}`, 'success');
+                } else {
+                    addLog(`❌ Erro: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Erro de conexão: ${error.message}`, 'error');
+            }
+        }
+
+        // Simular ação
+        async function simularAcao(action, data = {}) {
+            try {
+                addLog(`🔄 Enviando ação: ${action}...`, 'info');
+                
+                const response = await fetch(`${API_BASE}/acao`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        data: data,
+                        userAgent: navigator.userAgent,
+                        ip: '192.168.1.100', // IP simulado
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog(`✅ Ação registrada: ${action} - ID: ${result.actionId}`, 'success');
+                } else {
+                    addLog(`❌ Erro: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Erro de conexão: ${error.message}`, 'error');
+            }
+        }
+
+        // Verificar status
+        async function verificarStatus() {
+            try {
+                addLog('🔄 Verificando status do sistema...', 'info');
+                
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+                
+                const statusElement = document.getElementById('status');
+                statusElement.innerHTML = `
+                    <strong>Status do Sistema:</strong><br>
+                    🚀 Servidor: ${data.server}<br>
+                    📱 WhatsApp: ${data.whatsapp}<br>
+                    📊 Sessões: ${data.analytics.sessions}<br>
+                    ⚡ Ações: ${data.analytics.actions}<br>
+                    👥 Visitantes únicos: ${data.analytics.uniqueVisitors}<br>
+                    ⏱️ Uptime: ${Math.floor(data.uptime / 60)} minutos
+                `;
+                
+                addLog(`✅ Status obtido: Servidor ${data.server}, WhatsApp ${data.whatsapp}`, 'success');
+            } catch (error) {
+                addLog(`❌ Erro ao verificar status: ${error.message}`, 'error');
+                
+                const statusElement = document.getElementById('status');
+                statusElement.innerHTML = `❌ <strong>Erro:</strong> Não foi possível conectar ao servidor`;
+            }
+        }
+
+        // Testar WhatsApp
+        async function testarWhatsApp() {
+            try {
+                addLog('🔄 Testando envio WhatsApp...', 'info');
+                
+                const response = await fetch(`${API_BASE}/test-whatsapp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Teste do sistema de analytics via página web'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog('✅ Mensagem de teste enviada via WhatsApp!', 'success');
+                } else {
+                    addLog(`❌ Falha no WhatsApp: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Erro de conexão: ${error.message}`, 'error');
+            }
+        }
+
+        // Inicializar página
+        window.onload = function() {
+            addLog('🚀 Página carregada - Sistema de Analytics', 'info');
+            
+            // Simular uma visita automática ao carregar a página
+            setTimeout(() => {
+                simularVisita();
+            }, 1000);
+            
+            // Verificar status inicial
+            setTimeout(() => {
+                verificarStatus();
+            }, 2000);
+        };
+
+        // Registrar eventos reais da página
+        document.addEventListener('click', function(event) {
+            if (event.target.tagName === 'BUTTON' && !event.target.onclick) {
+                // Para botões que não têm onclick específico
+                simularAcao('clique_generico', {
+                    elemento: event.target.textContent,
+                    posicao: {x: event.clientX, y: event.clientY}
+                });
+            }
+        });
+
+        // Registrar tempo na página
+        let startTime = Date.now();
+        window.addEventListener('beforeunload', function() {
+            const timeOnPage = Math.floor((Date.now() - startTime) / 1000);
+            simularAcao('tempo_pagina', {
+                segundos: timeOnPage,
+                url: window.location.href
+            });
+        });
+    </script>
+</body>
+</html>
