@@ -8,7 +8,7 @@ const port = 3000;
 // Middleware para JSON
 app.use(express.json());
 
-// Configuração do cliente WhatsApp
+// Configuração do cliente WhatsApp com configurações para servidor
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -21,14 +21,17 @@ const client = new Client({
             '--no-first-run',
             '--no-zygote',
             '--single-process',
-            '--disable-gpu'
-        ]
+            '--disable-gpu',
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor'
+        ],
+        executablePath: '/usr/bin/google-chrome-stable' // Caminho do Chrome no Ubuntu
     }
 });
 
 // Estado da aplicação
 let whatsappReady = false;
-const targetNumber = '5521988255211'; // Número com código do país
+const targetNumber = '5521988255211';
 const analyticsData = {
     sessions: 0,
     actions: 0,
@@ -46,8 +49,6 @@ client.on('qr', (qr) => {
 client.on('ready', () => {
     console.log('✅ WhatsApp conectado com sucesso!');
     whatsappReady = true;
-    
-    // Enviar mensagem de confirmação
     sendWhatsAppMessage('🚀 Sistema de Analytics iniciado e conectado!');
 });
 
@@ -81,20 +82,17 @@ async function sendWhatsAppMessage(message) {
     }
 }
 
-// Rota /init - chamada quando alguém entra no site
+// Rota /init
 app.post('/init', async (req, res) => {
     try {
         const { userAgent, ip, timestamp = new Date().toISOString() } = req.body;
         
         analyticsData.sessions++;
-        
-        // Identificador único do visitante (pode ser melhorado com cookies/session)
         const visitorId = ip || req.ip || 'unknown';
         analyticsData.visitors.add(visitorId);
         
         console.log(`📊 Nova sessão iniciada - Total: ${analyticsData.sessions}`);
         
-        // Enviar notificação WhatsApp
         const message = `🔔 *Nova Visita no Site*\n\n` +
                        `👤 Sessões total: ${analyticsData.sessions}\n` +
                        `🆔 Visitantes únicos: ${analyticsData.visitors.size}\n` +
@@ -120,7 +118,7 @@ app.post('/init', async (req, res) => {
     }
 });
 
-// Rota /acao - chamada quando uma ação é executada
+// Rota /acao
 app.post('/acao', async (req, res) => {
     try {
         const { 
@@ -132,12 +130,10 @@ app.post('/acao', async (req, res) => {
         } = req.body;
         
         analyticsData.actions++;
-        
         const visitorId = ip || req.ip || 'unknown';
         
         console.log(`🎯 Nova ação registrada: ${action} - Total: ${analyticsData.actions}`);
         
-        // Enviar notificação WhatsApp
         const message = `⚡ *Nova Ação no Site*\n\n` +
                        `🎯 Ação: ${action || 'Não especificada'}\n` +
                        `📊 Total de ações: ${analyticsData.actions}\n` +
@@ -208,13 +204,13 @@ app.listen(port, () => {
     console.log(`📊 Analytics Backend iniciado`);
     console.log(`📱 Notificações serão enviadas para: ${targetNumber}`);
     console.log('\n📋 Rotas disponíveis:');
-    console.log(`   POST http://localhost:${port}/init`);
-    console.log(`   POST http://localhost:${port}/acao`);
-    console.log(`   GET  http://localhost:${port}/status`);
-    console.log(`   POST http://localhost:${port}/test-whatsapp`);
+    console.log(`   POST http://52.15.124.72:${port}/init`);
+    console.log(`   POST http://52.15.124.72:${port}/acao`);
+    console.log(`   GET  http://52.15.124.72:${port}/status`);
+    console.log(`   POST http://52.15.124.72:${port}/test-whatsapp`);
 });
 
-// Tratamento de erros não capturados
+// Tratamento de erros
 process.on('uncaughtException', (error) => {
     console.error('❌ Erro não capturado:', error);
 });
